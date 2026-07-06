@@ -1,0 +1,75 @@
+services:
+  - type: web
+    name: certificate-wallet
+    env: php
+    region: singapore
+    plan: free
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader
+      npm install
+      npm run build
+      php artisan config:cache
+      php artisan route:cache
+      php artisan view:cache
+    startCommand: |
+      php artisan migrate --force --seed
+      php artisan serve --host=0.0.0.0 --port=$PORT
+    healthCheckPath: /up
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: certificate-wallet-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: certificate-wallet-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: certificate-wallet-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: certificate-wallet-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: certificate-wallet-db
+          property: password
+      - key: FILESYSTEM_DISK
+        value: s3
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        value: ap-southeast-1
+      - key: AWS_BUCKET
+        sync: false
+      - key: AWS_USE_PATH_STYLE_ENDPOINT
+        value: false
+      - key: SESSION_DRIVER
+        value: database
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: CACHE_STORE
+        value: database
+      - key: REGISTRATION_ENABLED
+        value: false
+
+databases:
+  - name: certificate-wallet-db
+    region: singapore
+    plan: free
+    databaseName: certificate_wallet
+    ipAllowList: []
